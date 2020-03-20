@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import android.os.Bundle;
 import android.view.View;
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button button1 ;
     private ImageView picture;
     private Uri imageUri;
-
+    private TextView tv;
     public static File tempFile;
 
 
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         // Example of a call to a native method
-        TextView tv = findViewById(R.id.sample_text);
+        tv = findViewById(R.id.sample_text);
         tv.setText(stringFromJNI());
     }
 
@@ -120,8 +121,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public Bitmap  function1(){
         Bitmap bitmap =((BitmapDrawable)picture.getDrawable()).getBitmap();
-        runDetectAsync(bitmap);
-        //findfaceVector(bitmap);
+        float[] facedes = new float[128];
+        long t1=System.currentTimeMillis();
+        //findfaceVector(bitmap, facedes);
+        findfaceVectorBeta(bitmap, facedes);
+        long t2=System.currentTimeMillis();
+
+        tv.setText((t2-t1) + " \n " +Arrays.toString(facedes));
+
         findface(bitmap);
 
         return bitmap;
@@ -159,21 +166,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     @NonNull
-    @WorkerThread
-    protected void runDetectAsync(@NonNull Bitmap bitmap) {
-        {
-            findfaceVector(bitmap);
+    protected void runDetectAsync(@NonNull String imgPath) {
+
+        final String targetPath = Constants.getFaceShapeModelPath();
+        if (!new File(targetPath).exists()) {
+            throw new RuntimeException("cannot find shape_predictor_68_face_landmarks.dat");
+        }
+        // Init
+        if (mPersonDet == null) {
+            mPersonDet = new PedestrianDet();
+        }
+        if (mFaceDet == null) {
+            mFaceDet = new FaceDet(Constants.getFaceShapeModelPath());
+        }
+
+        Log.d(TAG, "Image path: " + imgPath);
+        List<VisionDetRet> faceList = mFaceDet.detect(imgPath);
+        if (faceList.size() > 0) {
+            Log.d(TAG, "faceList.size(): " + faceList.size());
+        } else {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(getApplicationContext(), "operation done", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "No face", Toast.LENGTH_SHORT).show();
                 }
             });
         }
 
     }
 
-    public native void findfaceVector(Bitmap bitmap);
+    public native void findfaceVector(Bitmap bitmap, float[] face_descriptor);
 
+    public native void findfaceVectorBeta(Bitmap bitmap, float[] face_descriptor);
 
 }
