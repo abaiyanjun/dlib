@@ -37,7 +37,7 @@ android {
                         '-DLIB_PNG_SUPPORT',
                         '-DLIB_JPEG_SUPPORT'
 
-                cppFlags "-std=c++17 -O3 -frtti -fexceptions"
+                cppFlags "-std=c++11 -O2 -Oz -O3 -Ofast -DNDEBUG -frtti -fexceptions"
             }
         }
         ndk {
@@ -83,5 +83,6 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'com.github.chernovdmitriy.injectionholder:androidx:1.0.0'
     implementation 'com.jakewharton:butterknife:10.2.1'
+    implementation project(path: ':opencv420sdk')
 
 }

@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 /zzsyxdlib.si4project
+/opencv420sdk/build
+/opencv420sdk/cxx

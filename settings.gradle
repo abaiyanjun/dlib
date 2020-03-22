@@ -1,2 +1,3 @@
-rootProject.name='syx-dlib-1'
-include ':app'
+rootProject.name='syx-dlib-2'
+include ':app', ':opencv420sdk'
+project(':opencv420sdk').projectDir = new File('opencv420sdk')

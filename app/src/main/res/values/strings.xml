@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">syx-dlib-1</string>
+    <string name="app_name_opencv">OCV Face Detection</string>
 </resources>

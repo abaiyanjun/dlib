@@ -6,12 +6,18 @@
 cmake_minimum_required(VERSION 3.4.1)
 
 set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 add_definitions( -DDLIB_NO_GUI_SUPPORT -DLIB_PNG_SUPPORT -DLIB_JPEG_SUPPORT)
 
+#set(ANDROID_OPENCV_COMPONENTS "opencv_java" CACHE STRING "")
+#message(STATUS "ANDROID_ABI=${ANDROID_ABI}")
+#find_package(OpenCV REQUIRED COMPONENTS ${ANDROID_OPENCV_COMPONENTS})
+
 
 #jni头文件
-include_directories(. dlib1919 jni_common jni_detections opencv42)
+include_directories(. dlib1919 jni_common jni_detections opencv42 ${CMAKE_CURRENT_LIST_DIR})
 
 #导入库文件
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}")
@@ -31,6 +37,7 @@ file(GLOB source_files
         jni_detections/jni_face_det.cpp
         jni_detections/jni_imageutils.cpp
         jni_detections/jni_pedestrian_det.cpp
+        DetectionBasedTracker_jni.cpp
         )
 
 
@@ -81,9 +88,10 @@ find_library( # Sets the name of the path variable.
 target_link_libraries( # Specifies the target library.
                        native-lib
                        dlib-lib
-        -ljnigraphics
-        #添加opencv_java4
-        opencv_java4
+                        -ljnigraphics
+                        #添加opencv_java4
+                        opencv_java4
+                       # ${ANDROID_OPENCV_COMPONENTS}
                        # Links the target library to the log library
                        # included in the NDK.
                        ${log-lib} )

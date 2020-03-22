@@ -47,8 +47,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String TAG = "syx-dlib";
     FaceDet mFaceDet;
     PedestrianDet mPersonDet;
-    private Button button ;
-    private Button button1 ;
+    private Button button;
+    private Button button1;
+    private Button button2;
     private ImageView picture;
     private Uri imageUri;
     private TextView tv;
@@ -85,9 +86,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         button = findViewById(R.id.button);
         button1 = findViewById(R.id.button1);
+        button2 = findViewById(R.id.button2);
         picture = findViewById(R.id.image);
         button.setOnClickListener(this);
         button1.setOnClickListener(this);
+        button2.setOnClickListener(this);
 
         try {
             File dir = new File("/sdcard/facelandmark");
@@ -116,6 +119,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(view.getId()==R.id.button1){
             ImageView tv = findViewById(R.id.image);
             tv.setImageBitmap(function1());
+        }
+        if(view.getId()==R.id.button2){
+            //start camera and opencv
+            Intent intent = new Intent();
+            intent.setClass(this,org.opencv.samples.facedetect.FdActivity.class);
+            startActivityForResult(intent,0);
         }
     }
 
