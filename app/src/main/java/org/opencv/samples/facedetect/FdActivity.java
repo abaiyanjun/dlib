@@ -12,9 +12,11 @@ import org.opencv.android.CameraActivity;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -25,12 +27,14 @@ import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
 
+import com.syx.dlib.FaceRecognize;
 import com.syx.face.R;
 
 public class FdActivity extends CameraActivity implements CvCameraViewListener2 {
@@ -59,6 +63,8 @@ public class FdActivity extends CameraActivity implements CvCameraViewListener2 
     private int                    mAbsoluteFaceSize   = 0;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
+
+    private FaceRecognize faceRecognize;
 
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -129,6 +135,8 @@ public class FdActivity extends CameraActivity implements CvCameraViewListener2 
 
         setContentView(R.layout.face_detect_surface_view);
 
+        faceRecognize = new FaceRecognize();
+
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
         mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
@@ -176,7 +184,7 @@ public class FdActivity extends CameraActivity implements CvCameraViewListener2 
         mRgba.release();
     }
 
-    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+    public Mat onCameraFrame000(CvCameraViewFrame inputFrame) {
 
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
@@ -207,6 +215,28 @@ public class FdActivity extends CameraActivity implements CvCameraViewListener2 
         Rect[] facesArray = faces.toArray();
         for (int i = 0; i < facesArray.length; i++)
             Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
+
+        return mRgba;
+    }
+
+    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+
+        mRgba = inputFrame.rgba();
+        mGray = inputFrame.gray();
+
+        if (mAbsoluteFaceSize == 0) {
+            int height = mGray.rows();
+            if (Math.round(height * mRelativeFaceSize) > 0) {
+                mAbsoluteFaceSize = Math.round(height * mRelativeFaceSize);
+            }
+            mNativeDetector.setMinFaceSize(mAbsoluteFaceSize);
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(mGray.width(), mGray.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(mGray, bitmap);
+        String facedes = faceRecognize.detect(bitmap);
+        Imgproc.putText(mRgba, facedes,
+                new Point(90, 90),Imgproc.FONT_HERSHEY_COMPLEX, 1.0, FACE_RECT_COLOR);
 
         return mRgba;
     }

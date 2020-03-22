@@ -375,7 +375,7 @@ SYX_FACE_JNI_METHOD(findfaceVectorBeta)(JNIEnv *env, jobject host, jobject bitma
         std::vector<matrix<rgb_pixel>> dlib_faces;
         dlib_faces.push_back(img);
         std::vector<matrix<float, 0, 1>> face_descriptors;
-        for(int n=0;n<10;n++) {
+        for(int n=0;n<4;n++) {
             LOGE("%s %d", "555 begin ", n);
             face_descriptors = net(dlib_faces);
             LOGE("%s %d", "555 end ", n);
@@ -408,4 +408,141 @@ SYX_FACE_JNI_METHOD(findfaceVectorBeta)(JNIEnv *env, jobject host, jobject bitma
     }
 }
 // ----------------------------------------------------------------------------------------
+
+
+// ----------------------------------------------------------------------------------------
+// for com.syx.dlib.FaceRecognize native
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define DLIB_FACE_JNI_METHOD(METHOD_NAME) \
+  Java_com_syx_dlib_FaceRecognize_##METHOD_NAME
+
+shape_predictor sp;
+anet_type net;
+
+void JNIEXPORT
+DLIB_FACE_JNI_METHOD(jniNativeClassInit)(JNIEnv* env, jclass _this) {}
+
+
+void JNICALL
+DLIB_FACE_JNI_METHOD(jniBitmapDetect)(JNIEnv *env, jobject host,
+        jobject bitmap, jfloatArray javaArr) {
+    LOGE("jniBitmapFaceDet begin");
+
+    if (bitmap == NULL) {
+        return;
+    }
+    try{
+        int lenght;
+        float* arrp;
+
+        LOGE("%s", "111");
+
+        AndroidBitmapInfo info;
+        memset(&info, 0, sizeof(info));
+        AndroidBitmap_getInfo(env, bitmap, &info);
+        void *pixels = NULL;
+        AndroidBitmap_lockPixels(env, bitmap, &pixels);
+        cv::Mat src(info.height, info.width, CV_8UC4, pixels);
+        cvtColor(src, src, cv::COLOR_BGRA2RGB);
+
+        cv::Mat img_v, img_hsv, img_struct,anchor_color_hsv, anchor_color, anchor1;
+        int r = 30;
+        double eps = 0.01;
+        std::vector<cv::Mat> hsv_vec;
+        cvtColor(src, img_hsv, cv::COLOR_BGR2HSV);
+
+        LOGE("%s", "222");
+
+        std::vector<cv::Rect> faces;
+        cv::Mat gray;
+        cvtColor(src, gray, cv::COLOR_BGR2GRAY);
+        cv::equalizeHist(gray, gray);
+        ccf.detectMultiScale(gray, faces, 1.1, 3, 0, cv::Size(300, 300), cv::Size(2000, 2000));
+
+        if(faces.size()==0){
+            return;
+        }
+        
+        LOGE("%s %d", "333 faces.size()=", faces.size());
+
+        cv::Mat image_roi = src(faces[0]);
+        //cv::cvtColor(image_roi, image_roi, cv::COLOR_BGRA2RGB);
+        cv::Size dsize = cv::Size(150, 150);
+        cv::Mat image_roi2 = cv::Mat(dsize, CV_8UC4);
+        cv::resize(image_roi, image_roi2, dsize);
+
+        LOGE("%s", "333 aaa");
+        matrix<rgb_pixel> img;
+        LOGE("%s", "333 bbb");
+        dlib::assign_image(img, cv_image<rgb_pixel>(image_roi2));
+
+        LOGE("%s", "444");
+
+        std::vector<matrix<rgb_pixel>> dlib_faces;
+        dlib_faces.push_back(img);
+        std::vector<matrix<float, 0, 1>> face_descriptors;
+
+        LOGE("%s ", "555 begin ");
+        face_descriptors = net(dlib_faces);
+        if(face_descriptors.size()==0){
+            LOGE("%s ", "555 face_descriptors.size()==0 ");
+            return;
+        }
+        //获取Java数组长度
+        lenght = env->GetArrayLength(javaArr);
+
+        //根据Java数组创建C数组，也就是把Java数组转换成C数组
+        arrp = env->GetFloatArrayElements(javaArr,0);
+
+        LOGE("%s", "face_descriptors...");
+        matrix<float, 0, 1> a = face_descriptors[0];
+        int i=0;
+        for (long r = 0; r < a.nr(); ++r)
+        {
+            for (long c = 0; c < a.nc(); ++c)
+            {
+                LOGE(" %f ", a(r,c));
+                *(arrp+i++) = a(r,c);
+            }
+        }
+
+        //将C数组种的元素拷贝到Java数组中
+        env->SetFloatArrayRegion(javaArr,0,lenght,arrp);
+        LOGE("%s", "9999999");
+    }
+    catch (std::exception& e)
+    {
+        LOGE("%s", e.what());
+    }
+
+    LOGE("jniBitmapFaceDet end ");
+    return;
+}
+
+jint JNIEXPORT JNICALL DLIB_FACE_JNI_METHOD(jniInit)(JNIEnv* env, jobject thiz) {
+    LOGE("jniInit");
+    // We will also use a face landmarking model to align faces to a standard pose:  (see face_landmark_detection_ex.cpp for an introduction)
+    deserialize("/sdcard/facelandmark/shape_predictor_5_face_landmarks.dat") >> sp;
+    // And finally we load the DNN responsible for face recognition.
+    deserialize("/sdcard/facelandmark/dlib_face_recognition_resnet_model_v1.dat") >> net;
+    ccf.load("/sdcard/facelandmark/haarcascade_frontalface_alt.xml");
+
+    return JNI_OK;
+}
+
+jint JNIEXPORT JNICALL
+DLIB_FACE_JNI_METHOD(jniDeInit)(JNIEnv* env, jobject thiz) {
+    LOGE("jniDeInit");
+    return JNI_OK;
+}
+
+#ifdef __cplusplus
+}
+#endif
+// ----------------------------------------------------------------------------------------
+
+
 
