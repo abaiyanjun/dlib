@@ -487,10 +487,16 @@ DLIB_FACE_JNI_METHOD(jniBitmapDetect)(JNIEnv *env, jobject host,
 
         LOGE("%s ", "555 begin ");
         face_descriptors = net(dlib_faces);
+        LOGE("%s ", "555 end ");
         if(face_descriptors.size()==0){
             LOGE("%s ", "555 face_descriptors.size()==0 ");
             return;
         }
+
+        LOGE("%s ", "666 begin ");
+        double len = length(face_descriptors[0] - face_descriptors[0]*0.9);
+        LOGE("%s %f", "666 end", len);
+
         //获取Java数组长度
         lenght = env->GetArrayLength(javaArr);
 
@@ -504,7 +510,7 @@ DLIB_FACE_JNI_METHOD(jniBitmapDetect)(JNIEnv *env, jobject host,
         {
             for (long c = 0; c < a.nc(); ++c)
             {
-                LOGE(" %f ", a(r,c));
+                //LOGE(" %f ", a(r,c));
                 *(arrp+i++) = a(r,c);
             }
         }

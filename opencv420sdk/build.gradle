@@ -99,6 +99,9 @@ android {
             keyAlias = 'key0'
             keyPassword 'android'
         }
+        debug {
+            storeFile file('D:\\workspaceandroid\\byj-signed-test.jks')
+        }
     }
     compileSdkVersion 29
     //buildToolsVersion "x.y.z" // not needed since com.android.tools.build:gradle:3.0.0
